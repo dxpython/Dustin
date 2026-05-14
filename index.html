@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dustin | AI & Algorithmic Engineering</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- GSAP & Lenis -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Courier New', 'Courier', 'monospace'],
+                    },
+                    colors: {
+                        black: '#000000',
+                        white: '#ffffff',
+                        dark: '#0a0a0a',
+                        accent: '#ff4500' // 尾焰颜色
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Lenis 平滑滚动 */
+        html.lenis { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+
+        /* 隐藏原生滚动条 */
+        ::-webkit-scrollbar { display: none; }
+
+        /* 电影级动态噪点 */
+        .film-grain {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* 按钮与发光动画 */
+        .btn-spacex {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .btn-spacex::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 0;
+            background-color: #ffffff;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: -1;
+        }
+        .btn-spacex:hover::after { height: 100%; top: 0; }
+        .btn-spacex:hover { color: #000000; }
+
+        /* 技能标签悬浮特效 */
+        .skill-tag {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .skill-tag:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.05);
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 火箭尾焰动画 */
+        .flame {
+            transform-origin: top center;
+            animation: flicker 0.1s infinite alternate;
+        }
+        @keyframes flicker {
+            0% { transform: scaleY(1) scaleX(1); opacity: 0.8; }
+            100% { transform: scaleY(1.3) scaleX(0.9); opacity: 1; }
+        }
+
+        /* 加载动画面板 */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .loader-line-container {
+            width: 200px;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .loader-line {
+            position: absolute;
+            top: 0; left: 0; height: 100%; width: 100%;
+            background: #fff;
+            transform: translateX(-100%);
+        }
+
+        /* 剪裁与遮罩 */
+        .clip-text-container { overflow: hidden; }
+        .clip-text { transform: translateY(110%); }
+
+        /* 算法进度条发光 */
+        .progress-bar-glow {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 仪表盘面板 */
+        .dashboard-panel {
+            background: rgba(10, 10, 10, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+        .blinking-dot {
+            animation: pulse-dot 1s infinite alternate;
+        }
+        @keyframes pulse-dot {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; box-shadow: 0 0 8px currentColor; }
+        }
+
+        /* 极客宣言排版 */
+        .manifesto-container {
+            perspective: 1000px;
+        }
+        .manifesto-text-line {
+            overflow: hidden;
+            line-height: 0.9;
+            padding-bottom: 0.1em;
+        }
+        .manifesto-text {
+            display: inline-block;
+            transform-origin: left bottom;
+            will-change: transform;
+        }
+
+        /* 量子核心 Canvas */
+        .quantum-canvas-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+
+
+        /* 水平线条展开动画 */
+        .line-reveal {
+            width: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            transition: width 2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .line-reveal.active { width: 100%; }
+
+        /* 浮动环境粒子层 */
+        .ambient-particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+            animation: float-particle linear infinite;
+        }
+        @keyframes float-particle {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(30px); opacity: 0; }
+        }
+
+        /* 发光脉冲分隔线 */
+        .glow-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,69,0,0.6) 50%, transparent 100%);
+            box-shadow: 0 0 15px rgba(255,69,0,0.3), 0 0 40px rgba(255,69,0,0.1);
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .glow-divider.active { opacity: 1; }
+
+        /* 卡片3D倾斜悬浮 */
+        .tilt-card {
+            transition: transform 0.5s cubic-bezier(0.03, 0.98, 0.52, 0.99), box-shadow 0.5s;
+            transform-style: preserve-3d;
+        }
+        .tilt-card:hover {
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255,69,0,0.1);
+        }
+
+        /* 数字计数器动画 */
+        .counter-value {
+            display: inline-block;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 文字逐字符淡入 */
+        .char-reveal span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px) rotateX(-40deg);
+            transform-origin: bottom;
+        }
+
+
+
+        /* 鼠标hover时边框发光 */
+        .hover-glow {
+            position: relative;
+        }
+        .hover-glow::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255,69,0,0.4), transparent 50%, rgba(255,255,255,0.2));
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: -1;
+        }
+        .hover-glow:hover::before { opacity: 1; }
+    </style>
+</head>
+<body class="selection:bg-white selection:text-black">
+
+
+
+    <!-- 电影噪点层 -->
+    <div class="film-grain"></div>
+
+    <!-- 浮动环境粒子 -->
+    <div id="ambient-particles" class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden"></div>
+
+    <!-- 卫星轨道 Canvas 背景 -->
+    <canvas id="orbitCanvas" class="fixed inset-0 z-[-1] pointer-events-none opacity-60"></canvas>
+
+    <!-- 侧边滚动火箭仪 (Scroll Indicator) -->
+    <div class="fixed right-4 md:right-8 top-0 h-full w-[1px] bg-white/10 z-50 pointer-events-none hidden md:block">
+        <div id="rocket-tracker" class="absolute left-1/2 transform -translate-x-1/2 w-8 h-16 flex flex-col items-center justify-start" style="top: 100%;">
+            <!-- 火箭 SVG -->
+            <svg class="w-6 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+            </svg>
+            <!-- 尾焰 -->
+            <div class="flame w-2 h-6 bg-gradient-to-b from-accent to-transparent rounded-full mt-[-2px] mix-blend-screen blur-[1px]"></div>
+        </div>
+    </div>
+
+    <!-- 系统初始化加载界面 -->
+    <div id="preloader">
+        <div class="clip-text-container mb-4">
+            <div class="clip-text text-xs tracking-[0.4em] uppercase text-gray-500 font-mono" id="loader-text">Loading Orbit Parameters...</div>
+        </div>
+        <div class="loader-line-container">
+            <div class="loader-line" id="loader-progress"></div>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <nav id="navbar" class="fixed w-full z-50 flex justify-between items-center px-8 md:px-16 py-6 transition-all duration-500 bg-gradient-to-b from-black/90 to-transparent opacity-0 translate-y-[-20px]">
+        <div class="font-bold text-xl tracking-widest uppercase relative group cursor-pointer text-white scramble-hover" data-text="DUSTIN DONG">
+            <a href="#">DUSTIN DONG</a>
+        </div>
+        <div class="hidden md:flex space-x-10 font-medium text-[10px] tracking-[0.25em] uppercase">
+            <a href="#quantum-core" class="hover:text-white text-gray-400 transition-colors">Core</a>
+            <a href="#arsenal" class="hover:text-white text-gray-400 transition-colors">Arsenal</a>
+            <a href="#missions" class="hover:text-white text-gray-400 transition-colors">Missions</a>
+            <a href="#manifesto" class="hover:text-white text-gray-400 transition-colors">Manifesto</a>
+            <a href="#telemetry" class="hover:text-white text-gray-400 transition-colors">Telemetry</a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- 主视觉 / Hero -->
+        <section class="spacex-section relative h-screen w-full flex items-end pb-24 md:pb-32 px-8 md:px-16 overflow-hidden">
+            <div class="absolute inset-0 z-[-2]">
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2560&auto=format&fit=crop" alt="Earth from Space" class="bg-parallax w-full h-[120%] object-cover -mt-[10%] opacity-80">
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
+            </div>
+            
+            <div class="relative z-10 w-full max-w-4xl">
+                <div class="clip-text-container mb-6">
+                    <h2 class="clip-text hero-anim text-xs md:text-sm font-mono tracking-[0.4em] text-gray-400 uppercase flex items-center gap-3">
+                        <span class="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></span> 
+                        AI Architecture & Engineering
+                    </h2>
+                </div>
+                
+                <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-[7rem] font-black uppercase tracking-tighter leading-[0.85] mb-8">
+                    <div class="clip-text-container"><div class="clip-text hero-anim text-white">ENGINEERING</div></div>
+                    <div class="clip-text-container"><div class="clip-text hero-anim text-transparent" style="-webkit-text-stroke: 1px white;">INTELLIGENCE</div></div>
+                </h1>
+                
+                <div class="clip-text-container mb-12">
+                    <p class="clip-text hero-anim text-sm md:text-base font-light max-w-xl text-gray-300 leading-relaxed">
+                        Pushing the boundaries of compute. Specializing in LLM fine-tuning architectures, distributed federated learning, and multi-agent communication protocol design. Engineering the future of intelligence, one model at a time.
+                    </p>
+                </div>
+
+                <div class="clip-text-container">
+                    <div class="clip-text hero-anim flex gap-4">
+                        <a href="#arsenal" class="inline-block bg-white text-black px-10 py-4 text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-gray-200 transition-colors">
+                            View Arsenal
+                        </a>
+                        <a href="#missions" class="inline-block border border-white/30 hover:border-white px-10 py-4 text-[10px] font-bold tracking-[0.2em] uppercase btn-spacex backdrop-blur-sm bg-black/20">
+                            Explore Missions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 量子核心 - 物理粒子文字重组系统 (Quantum Core) -->
+        <section id="quantum-core" class="quantum-canvas-container border-t border-white/10 relative z-10">
+            <canvas id="particleCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div class="absolute bottom-10 left-8 md:left-16 pointer-events-none z-20">
+                <p class="text-[10px] font-mono tracking-[0.4em] text-accent uppercase mb-2">Simulation Active</p>
+                <p class="text-xs font-mono text-gray-500 uppercase">Interactive Physics: Repulsion & Spring Damping</p>
+            </div>
+            <canvas id="textCanvas" class="hidden"></canvas>
+        </section>
+
+        <!-- 海量技能与算法库 / Tech Arsenal -->
+        <section id="arsenal" class="bg-black py-32 px-8 md:px-16 relative z-10 border-t border-white/10">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-20">
+                    <div class="flex items-center gap-6 mb-4">
+                        <span class="text-[10px] font-mono text-accent tracking-[0.3em] uppercase">01</span>
+                        <div class="line-reveal w-24" data-scroll-reveal></div>
+                    </div>
+                    <h2 class="text-3xl md:text-5xl font-bold uppercase tracking-tight text-transparent scramble-title" style="-webkit-text-stroke: 1px white;" data-text="TECHNOLOGY ARSENAL">TECHNOLOGY ARSENAL</h2>
+                    <p class="text-xs font-mono tracking-[0.3em] text-gray-500 uppercase mt-4">Core Payload &amp; Subsystems</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                    
+                    <!-- 编程语言推进器 (Progress Bars) -->
+                    <div class="lg:col-span-4 space-y-10 arsenal-group">
+                        <h3 class="text-sm font-mono tracking-[0.2em] text-white border-b border-white/20 pb-4 mb-8">Programming Languages</h3>
+                        
+                        <div class="space-y-6">
+                            <!-- Python -->
+                            <div class="prog-item">
+                                <div class="flex justify-between text-xs font-bold tracking-widest mb-2 uppercase">
+                                    <span>Python</span>
+                                    <span class="text-gray-500">98%</span>
+                                </div>
+                                <div class="w-full h-[2px] bg-white/10 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 h-full bg-white progress-fill" data-width="98%"></div>
+                                </div>
+                            </div>
+                            <!-- C++ -->
+                            <div class="prog-item">
+                                <div class="flex justify-between text-xs font-bold tracking-widest mb-2 uppercase">
+                                    <span>C++ / CUDA</span>
+                                    <span class="text-gray-500">90%</span>
+                                </div>
+                                <div class="w-full h-[2px] bg-white/10 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 h-full bg-white progress-fill" data-width="90%"></div>
+                                </div>
+                            </div>
+                            <!-- C# -->
+                            <div class="prog-item">
+                                <div class="flex justify-between text-xs font-bold tracking-widest mb-2 uppercase">
+                                    <span>C# / .NET</span>
+                                    <span class="text-gray-500">95%</span>
+                                </div>
+                                <div class="w-full h-[2px] bg-white/10 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 h-full bg-white progress-fill" data-width="95%"></div>
+                                </div>
+                            </div>
+                            <!-- Rust -->
+                            <div class="prog-item">
+                                <div class="flex justify-between text-xs font-bold tracking-widest mb-2 uppercase">
+                                    <span>Rust</span>
+                                    <span class="text-gray-500">80%</span>
+                                </div>
+                                <div class="w-full h-[2px] bg-white/10 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 h-full bg-white progress-fill" data-width="80%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 核心 AI 框架 (Tags) -->
+                    <div class="lg:col-span-8 arsenal-group">
+                        <div class="mb-12">
+                            <h3 class="text-sm font-mono tracking-[0.2em] text-white border-b border-white/20 pb-4 mb-8">AI Frameworks & Ecosystems</h3>
+                            <div class="flex flex-wrap gap-4">
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">PyTorch</span>
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">TensorFlow</span>
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">Semantic Kernel</span>
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">Hugging Face Transformers</span>
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">LangChain / LlamaIndex</span>
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">Ray / vLLM</span>
+                                <span class="skill-tag magnetic-item border border-white/20 text-gray-300 px-5 py-2 text-xs font-bold tracking-[0.15em] uppercase cursor-pointer" data-strength="20">ONNX Runtime</span>
+                            </div>
+                        </div>
+
+                        <!-- 算法与架构能力矩阵 -->
+                        <div>
+                            <h3 class="text-sm font-mono tracking-[0.2em] text-white border-b border-white/20 pb-4 mb-8">Algorithmic Architectures</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="skill-card tilt-card hover-glow p-6 border border-white/10 hover:border-white/40 transition-colors bg-white/5">
+                                    <h4 class="font-bold text-sm uppercase tracking-widest mb-2 text-white">Large Language Models</h4>
+                                    <p class="text-xs text-gray-500 leading-relaxed font-mono mt-2">LoRA / QLoRA Fine-tuning, Reward Modeling (RLHF), Inference Acceleration (KV Cache), Prompt Engineering.</p>
+                                </div>
+                                <div class="skill-card tilt-card hover-glow p-6 border border-white/10 hover:border-white/40 transition-colors bg-white/5">
+                                    <h4 class="font-bold text-sm uppercase tracking-widest mb-2 text-white">Graph Neural Networks</h4>
+                                    <p class="text-xs text-gray-500 leading-relaxed font-mono mt-2">GCN, GAT, Knowledge Graph Embedding (KGE), Dynamic Graph Spatial Correlation Analysis.</p>
+                                </div>
+                                <div class="skill-card tilt-card hover-glow p-6 border border-white/10 hover:border-white/40 transition-colors bg-white/5">
+                                    <h4 class="font-bold text-sm uppercase tracking-widest mb-2 text-white">Federated Learning</h4>
+                                    <p class="text-xs text-gray-500 leading-relaxed font-mono mt-2">Cross-node Multimodal Distributed Training, Differential Privacy, Dual-Perturbation Mechanism.</p>
+                                </div>
+                                <div class="skill-card tilt-card hover-glow p-6 border border-white/10 hover:border-white/40 transition-colors bg-white/5">
+                                    <h4 class="font-bold text-sm uppercase tracking-widest mb-2 text-white">Multi-Agent RL</h4>
+                                    <p class="text-xs text-gray-500 leading-relaxed font-mono mt-2">Multi-Agent Reinforcement Learning (MARL), PPO/DDPG Variants, Agent Collaboration Protocols.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 发光脉冲分隔线 -->
+        <div class="glow-divider w-full relative z-10" data-scroll-reveal></div>
+
+        <!-- 全局算力集群监控面板 (Global Cluster Status) -->
+        <section id="cluster-status" class="bg-black py-20 px-8 md:px-16 relative z-10 border-t border-white/10">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center gap-6 mb-8">
+                    <span class="text-[10px] font-mono text-accent tracking-[0.3em] uppercase">02</span>
+                    <div class="line-reveal w-24" data-scroll-reveal></div>
+                </div>
+                <div class="dashboard-panel p-8 md:p-12 relative overflow-hidden">
+                    <!-- 背景网格修饰 -->
+                    <div class="absolute inset-0 z-0 opacity-10" style="background-image: linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px); background-size: 30px 30px;"></div>
+                    
+                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-white/20 pb-6">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-bold uppercase tracking-widest text-white mb-2">Global Cluster Status</h2>
+                            <p class="text-[10px] font-mono tracking-[0.3em] text-gray-500 uppercase flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-red-500 blinking-dot inline-block text-red-500"></span> Live Telemetry Link Active
+                            </p>
+                        </div>
+                        <div class="mt-4 md:mt-0 text-right">
+                            <p class="text-[10px] font-mono tracking-[0.2em] text-gray-400 uppercase">Uptime</p>
+                            <p class="text-sm font-mono text-white" id="uptime-counter">99.999%</p>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+                        <!-- Metric 1 -->
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-mono tracking-[0.2em] uppercase mb-2">Active Agents</span>
+                            <span class="text-3xl md:text-5xl font-light text-white font-mono tracking-tighter" id="metric-agents">12,450</span>
+                            <div class="w-full h-[2px] bg-white/10 mt-4 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 h-full bg-white/50 w-3/4 animate-pulse"></div>
+                            </div>
+                        </div>
+                        <!-- Metric 2 -->
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-mono tracking-[0.2em] uppercase mb-2">Current Loss</span>
+                            <span class="text-3xl md:text-5xl font-light text-accent font-mono tracking-tighter" id="metric-loss">0.0142</span>
+                            <div class="w-full h-[2px] bg-white/10 mt-4 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 h-full bg-accent/50 w-[15%]"></div>
+                            </div>
+                        </div>
+                        <!-- Metric 3 -->
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-mono tracking-[0.2em] uppercase mb-2">Throughput</span>
+                            <span class="text-3xl md:text-5xl font-light text-white font-mono tracking-tighter" id="metric-throughput">4.2M</span>
+                            <span class="text-[10px] text-gray-600 font-mono tracking-widest mt-1">Tokens / Sec</span>
+                        </div>
+                        <!-- Metric 4 -->
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-gray-500 font-mono tracking-[0.2em] uppercase mb-2">Core Temp</span>
+                            <span class="text-3xl md:text-5xl font-light text-white font-mono tracking-tighter" id="metric-temp">72°C</span>
+                            <span class="text-[10px] text-green-500 font-mono tracking-widest mt-1">[STABLE]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 项目展示区 -->
+        <div id="missions">
+            <!-- 项目标题区 -->
+            <div class="py-16 px-8 md:px-16 bg-black relative z-10">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex items-center gap-6 mb-4">
+                        <span class="text-[10px] font-mono text-accent tracking-[0.3em] uppercase">03</span>
+                        <div class="line-reveal w-24" data-scroll-reveal></div>
+                    </div>
+                    <h2 class="text-3xl md:text-5xl font-bold uppercase tracking-tight text-transparent scramble-title" style="-webkit-text-stroke: 1px white;" data-text="MISSION LOG">MISSION LOG</h2>
+                    <p class="text-xs font-mono tracking-[0.3em] text-gray-500 uppercase mt-4">Open Source Contributions &amp; Research</p>
+                </div>
+            </div>
+            <!-- 项目 1: Semantic Kernel -->
+            <section class="spacex-section relative h-screen w-full flex items-end pb-24 md:pb-32 px-8 md:px-16 overflow-hidden border-t border-white/10">
+                <div class="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2560&auto=format&fit=crop" alt="Abstract Data" class="bg-parallax w-full h-[120%] object-cover -mt-[10%] brightness-75">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                </div>
+                
+                <div class="relative z-10 w-full max-w-4xl content-reveal">
+                    <h2 class="text-4xl sm:text-6xl md:text-7xl font-bold uppercase tracking-tight mb-6 scramble-title" data-text="SEMANTIC KERNEL">SEMANTIC KERNEL</h2>
+                    <div class="flex gap-4 items-center mb-6">
+                        <span class="text-[10px] border border-gray-500/50 text-gray-300 px-3 py-1 rounded uppercase tracking-[0.2em] backdrop-blur-md">C#</span>
+                        <span class="text-[10px] bg-white/90 text-black font-bold px-3 py-1 rounded uppercase tracking-[0.2em]">★ 27.8K</span>
+                    </div>
+                    <p class="text-sm md:text-lg font-light max-w-xl mb-10 text-gray-300 leading-relaxed">
+                        Microsoft's premier open-source AI orchestration framework. The semantic kernel that redefines software engineering — seamlessly integrating complex LLM reasoning into core business architectures.
+                    </p>
+                    <a href="https://github.com/microsoft/semantic-kernel" target="_blank" class="inline-block border border-white/50 px-10 py-4 text-xs font-bold tracking-[0.15em] uppercase btn-spacex backdrop-blur-sm">
+                        View Registry
+                    </a>
+                </div>
+            </section>
+
+            <!-- 项目 2: Agent Framework -->
+            <section class="spacex-section relative h-screen w-full flex items-end pb-24 md:pb-32 px-8 md:px-16 overflow-hidden">
+                <div class="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2560&auto=format&fit=crop" alt="Circuit Node" class="bg-parallax w-full h-[120%] object-cover -mt-[10%] brightness-50 grayscale">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                </div>
+                
+                <div class="relative z-10 w-full max-w-4xl content-reveal">
+                    <h2 class="text-4xl sm:text-6xl md:text-7xl font-bold uppercase tracking-tight mb-6 scramble-title" data-text="AGENT FRAMEWORK">AGENT FRAMEWORK</h2>
+                    <div class="flex gap-4 items-center mb-6">
+                        <span class="text-[10px] border border-gray-500/50 text-gray-300 px-3 py-1 rounded uppercase tracking-[0.2em] backdrop-blur-md">Python</span>
+                        <span class="text-[10px] bg-white/90 text-black font-bold px-3 py-1 rounded uppercase tracking-[0.2em]">★ 10.1K</span>
+                    </div>
+                    <p class="text-sm md:text-lg font-light max-w-xl mb-10 text-gray-300 leading-relaxed">
+                        An advanced framework for building, orchestrating, and deploying AI agents and multi-agent workflows. Native industrial-grade support for both Python and .NET ecosystems.
+                    </p>
+                    <a href="https://github.com/microsoft/agent-framework" target="_blank" class="inline-block border border-white/50 px-10 py-4 text-xs font-bold tracking-[0.15em] uppercase btn-spacex backdrop-blur-sm">
+                        View Registry
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- 发光脉冲分隔线 -->
+        <div class="glow-divider w-full relative z-10" data-scroll-reveal></div>
+
+        <!-- 极客宣言 (The Manifesto) -->
+        <section id="manifesto" class="bg-black py-32 md:py-48 px-8 md:px-16 relative z-10 border-t border-white/10 overflow-hidden manifesto-container">
+            <!-- 巨大的背景水印 -->
+            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none z-0">
+                <span class="text-[15rem] md:text-[25rem] font-black uppercase tracking-tighter whitespace-nowrap">INTELLIGENCE</span>
+            </div>
+            
+            <div class="max-w-7xl mx-auto relative z-10">
+                <div class="flex items-center gap-6 mb-16">
+                    <span class="text-[10px] font-mono text-accent tracking-[0.3em] uppercase">04</span>
+                    <div class="line-reveal w-24" data-scroll-reveal></div>
+                </div>
+                <div class="text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter text-white">
+                    <div class="manifesto-text-line"><span class="manifesto-text">We do not</span></div>
+                    <div class="manifesto-text-line"><span class="manifesto-text text-gray-600">build software.</span></div>
+                    <div class="manifesto-text-line mt-8 md:mt-12"><span class="manifesto-text">We engineer</span></div>
+                    <div class="manifesto-text-line"><span class="manifesto-text text-transparent bg-clip-text bg-gradient-to-r from-accent to-white" style="-webkit-text-stroke: 1px rgba(255,69,0,0.5);">intelligence.</span></div>
+                </div>
+                
+                <div class="mt-16 max-w-2xl">
+                    <p class="text-sm md:text-base font-mono text-gray-400 leading-relaxed tracking-wide">
+                        // THE ARCHITECTURE DICTATES THE LIMITS OF COGNITION.<br>
+                        // IN A WORLD OBSESSED WITH PARAMETER COUNTS, WE OPTIMIZE FOR REASONING EFFICIENCY AND PROTOCOL ELEGANCE.<br>
+                        // WELCOME TO THE ALGORITHMIC FRONTIER.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 发光脉冲分隔线 -->
+        <div class="glow-divider w-full relative z-10" data-scroll-reveal></div>
+
+        <!-- 总结遥测区 -->
+        <section id="telemetry" class="bg-dark text-white py-24 md:py-32 px-8 md:px-16 border-t border-white/10 relative z-10">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center gap-6 mb-12">
+                    <span class="text-[10px] font-mono text-accent tracking-[0.3em] uppercase">05</span>
+                    <div class="line-reveal w-24" data-scroll-reveal></div>
+                </div>
+                <div class="flex justify-between items-end mb-16 border-b border-white/10 pb-8">
+                    <h3 class="text-xs tracking-[0.4em] text-gray-500 uppercase font-mono">System Telemetry Summary</h3>
+                    <div class="hidden md:flex gap-2">
+                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-[10px] text-gray-500 font-mono tracking-widest uppercase">Systems Active</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-16">
+                    <div class="flex flex-col">
+                        <span class="text-4xl md:text-5xl font-light mb-4">KAL</span>
+                        <span class="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-4">Time Series Forecaster</span>
+                        <div class="w-full h-[1px] bg-white/30 mb-4"></div>
+                        <p class="text-sm text-gray-500 leading-relaxed font-light">Published in PLOS One. Advanced time-series forecasting architecture fusing LSTM with KAN.</p>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <span class="text-4xl md:text-5xl font-light mb-4">v-RAG</span>
+                        <span class="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-4">Vectorless Indexing</span>
+                        <div class="w-full h-[1px] bg-white/30 mb-4"></div>
+                        <p class="text-sm text-gray-500 leading-relaxed font-light">Breaking traditional embedding limitations. Next-gen document retrieval engine built on pure logical reasoning (PageIndex).</p>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <span class="text-4xl md:text-5xl font-light mb-4">DAG<span class="text-2xl text-gray-600">.Fed</span></span>
+                        <span class="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-4">Federated Topology</span>
+                        <div class="w-full h-[1px] bg-white/30 mb-4"></div>
+                        <p class="text-sm text-gray-500 leading-relaxed font-light">Dual-perturbation adaptive GNN federated learning framework designed for multimodal collaborative training.</p>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <span class="text-4xl md:text-5xl font-light mb-4 text-white">#Kit</span>
+                        <span class="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-4">.NET AI Toolkit</span>
+                        <div class="w-full h-[1px] bg-white/30 mb-4"></div>
+                        <p class="text-sm text-gray-500 leading-relaxed font-light">Core author of production-grade SharpAIKit. Unified LLM API abstraction layer and low-level infrastructure.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 底部联络区 -->
+        <footer id="contact" class="bg-black text-white py-24 px-8 md:px-16 border-t border-white/10 flex flex-col items-center text-center relative z-10">
+            <h2 class="text-xs tracking-[0.4em] text-gray-500 uppercase mb-6 font-mono">Initiate Sequence</h2>
+            <p class="text-2xl md:text-4xl font-light mb-16 uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">Ready to Deploy Advanced AI.</p>
+            
+            <a href="mailto:hello@dustin.com" class="inline-block border border-white/50 px-16 py-5 text-xs font-bold tracking-[0.2em] uppercase btn-spacex mb-24 backdrop-blur-sm">
+                Contact Control
+            </a>
+
+            <div class="flex flex-col md:flex-row w-full max-w-7xl justify-between items-center text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-500 border-t border-white/10 pt-8">
+                <div class="flex gap-8 mb-6 md:mb-0">
+                    <a href="https://github.com/dxpython" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+                    <a href="#" class="hover:text-white transition-colors">LinkedIn</a>
+                    <a href="#" class="hover:text-white transition-colors">Google Scholar</a>
+                </div>
+                <p class="font-mono">DUSTIN DONG &copy; 2026 / ALL SYSTEMS NOMINAL</p>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- 脚本逻辑 -->
+    <script>
+        // 注册 GSAP 滚动插件
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. Lenis 平滑滚动引擎
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            smooth: true,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // 2. 卫星轨道 Canvas 动画
+        const canvas = document.getElementById('orbitCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        // Planets (SpaceX-inspired celestial bodies)
+        const planets = [
+            { x: 0.82, y: 0.18, radius: 35, color: '#3a3a5c', glow: 'rgba(100,120,255,0.15)', hasRing: true, ringColor: 'rgba(150,160,255,0.12)', ringWidth: 55, ringTilt: 0.3 },
+            { x: 0.12, y: 0.72, radius: 22, color: '#5c3a2a', glow: 'rgba(255,120,60,0.12)', hasRing: false },
+            { x: 0.92, y: 0.65, radius: 14, color: '#2a4a3a', glow: 'rgba(80,200,140,0.1)', hasRing: false },
+            { x: 0.06, y: 0.25, radius: 8, color: '#4a4a4a', glow: 'rgba(255,255,255,0.08)', hasRing: false },
+            { x: 0.55, y: 0.88, radius: 18, color: '#4a3050', glow: 'rgba(180,100,220,0.1)', hasRing: true, ringColor: 'rgba(200,150,255,0.08)', ringWidth: 30, ringTilt: 0.25 },
+        ];
+
+        const orbits = [
+            { rx: 0.25, ry: 0.1, angle: 0.15, speed: 0.003, satelliteSize: 2, color: 'rgba(255,255,255,0.12)', satColor: '#fff', satPos: 0 },
+            { rx: 0.35, ry: 0.14, angle: Math.PI / 6, speed: -0.002, satelliteSize: 1.5, color: 'rgba(255,255,255,0.08)', satColor: '#ccc', satPos: Math.PI },
+            { rx: 0.45, ry: 0.18, angle: -Math.PI / 8, speed: 0.0015, satelliteSize: 2.5, color: 'rgba(255,255,255,0.06)', satColor: '#e0e0e0', satPos: Math.PI / 2 },
+            { rx: 0.55, ry: 0.22, angle: Math.PI / 4, speed: -0.001, satelliteSize: 1.8, color: 'rgba(255,255,255,0.05)', satColor: '#aaa', satPos: Math.PI * 1.5 },
+            { rx: 0.65, ry: 0.26, angle: -Math.PI / 5, speed: 0.0008, satelliteSize: 3, color: 'rgba(255,255,255,0.04)', satColor: '#ddd', satPos: Math.PI * 0.7 },
+            { rx: 0.18, ry: 0.07, angle: Math.PI / 3, speed: 0.004, satelliteSize: 1.2, color: 'rgba(255,255,255,0.1)', satColor: '#fff', satPos: 0.5 },
+        ];
+
+        // Background stars
+        const stars = [];
+        for (let i = 0; i < 200; i++) {
+            stars.push({
+                x: Math.random(),
+                y: Math.random(),
+                size: Math.random() * 1.5 + 0.3,
+                brightness: Math.random() * 0.6 + 0.2,
+                twinkleSpeed: Math.random() * 0.02 + 0.005,
+                twinkleOffset: Math.random() * Math.PI * 2
+            });
+        }
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let frameCount = 0;
+
+        function drawOrbits() {
+            ctx.clearRect(0, 0, width, height);
+            frameCount++;
+            const cx = width / 2;
+            const cy = height / 2;
+            const baseRadius = Math.max(width, height);
+
+            // Draw twinkling stars
+            stars.forEach(star => {
+                const alpha = star.brightness + Math.sin(frameCount * star.twinkleSpeed + star.twinkleOffset) * 0.2;
+                ctx.beginPath();
+                ctx.arc(star.x * width, star.y * height, star.size, 0, 2 * Math.PI);
+                ctx.fillStyle = `rgba(255,255,255,${Math.max(0, alpha)})`;
+                ctx.fill();
+            });
+
+            // Draw planets
+            planets.forEach(planet => {
+                const px = planet.x * width;
+                const py = planet.y * height;
+
+                // Atmospheric glow
+                const glowGrad = ctx.createRadialGradient(px, py, planet.radius * 0.5, px, py, planet.radius * 3);
+                glowGrad.addColorStop(0, planet.glow);
+                glowGrad.addColorStop(1, 'transparent');
+                ctx.beginPath();
+                ctx.arc(px, py, planet.radius * 3, 0, 2 * Math.PI);
+                ctx.fillStyle = glowGrad;
+                ctx.fill();
+
+                // Planet body with gradient
+                const bodyGrad = ctx.createRadialGradient(px - planet.radius * 0.3, py - planet.radius * 0.3, planet.radius * 0.1, px, py, planet.radius);
+                bodyGrad.addColorStop(0, planet.color);
+                bodyGrad.addColorStop(1, '#0a0a0a');
+                ctx.beginPath();
+                ctx.arc(px, py, planet.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = bodyGrad;
+                ctx.fill();
+
+                // Ring (if applicable)
+                if (planet.hasRing) {
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.scale(1, planet.ringTilt);
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, planet.ringWidth, planet.ringWidth, 0, 0, 2 * Math.PI);
+                    ctx.strokeStyle = planet.ringColor;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    // Second ring
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, planet.ringWidth * 1.2, planet.ringWidth * 1.2, 0, 0, 2 * Math.PI);
+                    ctx.strokeStyle = planet.ringColor;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            });
+
+            // Draw orbits and satellites
+            orbits.forEach(orbit => {
+                const rx = baseRadius * orbit.rx;
+                const ry = baseRadius * orbit.ry;
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(orbit.angle);
+
+                // Dashed orbit line (SpaceX style)
+                ctx.beginPath();
+                ctx.setLineDash([4, 8]);
+                ctx.ellipse(0, 0, rx, ry, 0, 0, 2 * Math.PI);
+                ctx.strokeStyle = orbit.color;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                orbit.satPos += orbit.speed;
+                const sx = rx * Math.cos(orbit.satPos);
+                const sy = ry * Math.sin(orbit.satPos);
+
+                // Satellite glow
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = orbit.satColor;
+
+                ctx.beginPath();
+                ctx.arc(sx, sy, orbit.satelliteSize, 0, 2 * Math.PI);
+                ctx.fillStyle = orbit.satColor;
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                // Satellite trail
+                for (let t = 1; t <= 5; t++) {
+                    const trailPos = orbit.satPos - orbit.speed * t * 8;
+                    const tx = rx * Math.cos(trailPos);
+                    const ty = ry * Math.sin(trailPos);
+                    ctx.beginPath();
+                    ctx.arc(tx, ty, orbit.satelliteSize * (1 - t * 0.15), 0, 2 * Math.PI);
+                    ctx.fillStyle = `rgba(255,255,255,${0.15 - t * 0.025})`;
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            });
+
+            requestAnimationFrame(drawOrbits);
+        }
+        drawOrbits();
+
+        // 3. 终端解码乱码特效 (Scramble Text)
+        const chars = '!<>-_\\/[]{}—=+*^?#________';
+        function scrambleText(element, newText, duration = 1000) {
+            const oldText = element.innerText;
+            const length = Math.max(oldText.length, newText.length);
+            let frame = 0;
+            const totalFrames = duration / 16; // 60fps
+
+            function update() {
+                let output = '';
+                for (let i = 0; i < length; i++) {
+                    const progress = frame / totalFrames;
+                    const charTargetProgress = i / length;
+                    
+                    if (progress > charTargetProgress + 0.2) {
+                        output += newText[i] || '';
+                    } else if (progress > charTargetProgress) {
+                        output += chars[Math.floor(Math.random() * chars.length)];
+                    } else {
+                        output += oldText[i] || chars[Math.floor(Math.random() * chars.length)];
+                    }
+                }
+                element.innerText = output;
+                if (frame < totalFrames) {
+                    frame++;
+                    requestAnimationFrame(update);
+                } else {
+                    element.innerText = newText;
+                }
+            }
+            update();
+        }
+
+        // 4. 滚动逻辑：火箭发射伴随条 & 动画控制
+        window.addEventListener('load', () => {
+            const tl = gsap.timeline();
+
+            // Preloader 动画
+            tl.to("#loader-progress", { x: "0%", duration: 1.5, ease: "power2.inOut" })
+              .to("#loader-text", { y: "-110%", duration: 0.5, ease: "power3.in" }, "+=0.2")
+              .to("#preloader", { yPercent: -100, duration: 1, ease: "power4.inOut" })
+              .to("#navbar", { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.5")
+              .to(".hero-anim", { y: "0%", duration: 1.2, stagger: 0.15, ease: "power4.out" }, "-=0.8");
+
+            // 侧边火箭滚动逻辑 (映射页面滚动高度)
+            gsap.to("#rocket-tracker", {
+                y: () => -(document.documentElement.scrollHeight - window.innerHeight),
+                ease: "none",
+                scrollTrigger: {
+                    trigger: "body",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 0.5 // 平滑的火箭跟随
+                }
+            });
+
+            // 视差效果 & 大标题乱码揭示
+            const sections = document.querySelectorAll('.spacex-section, #arsenal');
+            sections.forEach(section => {
+                const bgImg = section.querySelector('.bg-parallax');
+                const content = section.querySelector('.content-reveal');
+                const title = section.querySelector('.scramble-title');
+
+                if (bgImg) {
+                    gsap.to(bgImg, {
+                        yPercent: 20, ease: "none",
+                        scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: true }
+                    });
+                }
+
+                if (content && section.id !== 'hero') {
+                    gsap.from(content, {
+                        y: 80, opacity: 0, duration: 1.2, ease: "power3.out",
+                        scrollTrigger: { trigger: section, start: "top 75%" }
+                    });
+                }
+
+                // 标题进入视口时执行黑客解码动画
+                if(title) {
+                    ScrollTrigger.create({
+                        trigger: section,
+                        start: "top 80%",
+                        onEnter: () => scrambleText(title, title.getAttribute('data-text'), 1200),
+                        once: true
+                    });
+                }
+            });
+
+            // Arsenal 区块：进度条填充动画 & 标签进场
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                gsap.fromTo(bar, 
+                    { x: "-100%" }, 
+                    {
+                        x: "0%", 
+                        width: bar.getAttribute('data-width'),
+                        duration: 1.5, 
+                        ease: "power4.out",
+                        scrollTrigger: { trigger: ".arsenal-group", start: "top 80%" },
+                        onComplete: () => bar.classList.add('progress-bar-glow')
+                    }
+                );
+            });
+
+            gsap.from(".skill-tag", {
+                y: 30, opacity: 0, duration: 0.8, stagger: 0.05, ease: "back.out(1.5)",
+                scrollTrigger: { trigger: ".arsenal-group", start: "top 70%" }
+            });
+
+            gsap.from(".skill-card", {
+                y: 40, opacity: 0, duration: 1, stagger: 0.1, ease: "power3.out",
+                scrollTrigger: { trigger: ".skill-card", start: "top 85%" }
+            });
+        });
+
+        // 5. 鼠标悬停时的黑客文字乱码互动
+        const scrambleHoverElements = document.querySelectorAll('.scramble-hover');
+        scrambleHoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => scrambleText(el.querySelector('a'), el.getAttribute('data-text'), 600));
+        });
+
+        // 6. 磁吸交互 (Magnetic Hover for Skills)
+        const magneticElements = document.querySelectorAll('.magnetic-item');
+        magneticElements.forEach((el) => {
+            el.addEventListener('mousemove', (e) => {
+                const position = el.getBoundingClientRect();
+                const x = e.clientX - position.left - position.width / 2;
+                const y = e.clientY - position.top - position.height / 2;
+                const strength = el.dataset.strength || 20;
+
+                gsap.to(el, {
+                    x: (x / position.width) * strength,
+                    y: (y / position.height) * strength,
+                    duration: 1,
+                    ease: "power4.out"
+                });
+            });
+
+            el.addEventListener('mouseleave', () => {
+                gsap.to(el, {
+                    x: 0,
+                    y: 0,
+                    duration: 1,
+                    ease: "elastic.out(1, 0.3)"
+                });
+            });
+        });
+
+        // 7. 导航栏背景渐变响应
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-black');
+                navbar.classList.remove('bg-gradient-to-b', 'from-black/90', 'to-transparent');
+            } else {
+                navbar.classList.remove('bg-black');
+                navbar.classList.add('bg-gradient-to-b', 'from-black/90', 'to-transparent');
+            }
+        });
+
+        // 8. 实时集群状态数据模拟 (Global Cluster Status)
+        function initDashboardSimulation() {
+            const agentsEl = document.getElementById('metric-agents');
+            const lossEl = document.getElementById('metric-loss');
+            const throughputEl = document.getElementById('metric-throughput');
+            const tempEl = document.getElementById('metric-temp');
+
+            if(!agentsEl) return;
+
+            let baseAgents = 12450;
+            let baseLoss = 0.0142;
+            let baseThroughput = 4.2;
+            let baseTemp = 72;
+
+            setInterval(() => {
+                // 模拟活跃节点波动
+                const agentsVal = baseAgents + Math.floor(Math.random() * 20 - 10);
+                agentsEl.innerText = agentsVal.toLocaleString();
+
+                // 模拟 Loss 下降与抖动
+                baseLoss = baseLoss - (Math.random() * 0.00005);
+                if(baseLoss < 0.005) baseLoss = 0.0142; // 重置循环
+                lossEl.innerText = baseLoss.toFixed(4);
+
+                // 模拟吞吐量
+                const throughputVal = baseThroughput + (Math.random() * 0.4 - 0.2);
+                throughputEl.innerText = throughputVal.toFixed(1) + 'M';
+
+                // 模拟温度
+                const tempVal = baseTemp + Math.floor(Math.random() * 4 - 2);
+                tempEl.innerText = tempVal + '°C';
+            }, 1500); // 每1.5秒刷新一次
+        }
+        initDashboardSimulation();
+
+        // 9. Manifesto 文字揭示动画
+        window.addEventListener('load', () => {
+            const manifestoLines = document.querySelectorAll('.manifesto-text');
+            if (manifestoLines.length > 0) {
+                gsap.from(manifestoLines, {
+                    y: "110%",
+                    rotationZ: 5,
+                    duration: 1.5,
+                    stagger: 0.15,
+                    ease: "power4.out",
+                    scrollTrigger: {
+                        trigger: "#manifesto",
+                        start: "top 75%",
+                    }
+                });
+            }
+        });
+
+        // 10. Quantum Core 粒子物理引擎
+        function initParticleEngine() {
+            const canvas = document.getElementById('particleCanvas');
+            const textCanvas = document.getElementById('textCanvas');
+            if (!canvas || !textCanvas) return;
+
+            const ctx = canvas.getContext('2d', { alpha: false });
+            const textCtx = textCanvas.getContext('2d', { willReadFrequently: true });
+            
+            let width, height;
+            let particles = [];
+            const mouse = { x: -1000, y: -1000, radius: 120 }; // 鼠标排斥半径
+
+            class Particle {
+                constructor(x, y) {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.baseX = x;
+                    this.baseY = y;
+                    this.size = Math.random() * 1.5 + 0.5;
+                    this.density = (Math.random() * 30) + 5; 
+                    this.color = Math.random() > 0.85 ? '#ff4500' : '#ffffff'; 
+                }
+
+                update() {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouse.radius) {
+                        let forceDirectionX = dx / distance;
+                        let forceDirectionY = dy / distance;
+                        let force = (mouse.radius - distance) / mouse.radius;
+                        let directionX = forceDirectionX * force * this.density;
+                        let directionY = forceDirectionY * force * this.density;
+                        this.x -= directionX;
+                        this.y -= directionY;
+                    } else {
+                        if (this.x !== this.baseX) {
+                            let dx = this.x - this.baseX;
+                            this.x -= dx / 15; 
+                        }
+                        if (this.y !== this.baseY) {
+                            let dy = this.y - this.baseY;
+                            this.y -= dy / 15;
+                        }
+                    }
+                }
+
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            function initText() {
+                particles = [];
+                textCtx.clearRect(0, 0, width, height);
+                const fontSize = Math.min(width / 7, 180); 
+                textCtx.font = `900 ${fontSize}px Inter, sans-serif`;
+                textCtx.fillStyle = 'white';
+                textCtx.textAlign = 'center';
+                textCtx.textBaseline = 'middle';
+                textCtx.fillText('AGI CORE', width / 2, height / 2);
+
+                const textCoordinates = textCtx.getImageData(0, 0, width, height);
+                const sampleRate = width < 768 ? 2 : 3; 
+                
+                for (let y = 0; y < textCoordinates.height; y += sampleRate) {
+                    for (let x = 0; x < textCoordinates.width; x += sampleRate) {
+                        if (textCoordinates.data[(y * 4 * textCoordinates.width) + (x * 4) + 3] > 128) {
+                            particles.push(new Particle(x, y));
+                        }
+                    }
+                }
+            }
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                textCanvas.width = width;
+                textCanvas.height = height;
+                initText();
+            }
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; // 拖影效果
+                ctx.fillRect(0, 0, width, height);
+                
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            
+            // 将鼠标事件监听器绑定到 window 确保全局生效，但坐标相对于 canvas
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+            window.addEventListener('mouseout', () => {
+                mouse.x = -1000;
+                mouse.y = -1000;
+            });
+
+            resize();
+            animate();
+        }
+        
+        // 确保字体加载后再初始化文字粒子
+        document.fonts.ready.then(() => {
+            initParticleEngine();
+        });
+
+
+
+        // 12. 浮动环境粒子生成器
+        (function initAmbientParticles() {
+            const container = document.getElementById('ambient-particles');
+            if (!container) return;
+            function spawnParticle() {
+                const p = document.createElement('div');
+                p.className = 'ambient-particle';
+                const size = Math.random() * 2 + 1;
+                const left = Math.random() * 100;
+                const duration = Math.random() * 8 + 10;
+                p.style.cssText = `width:${size}px;height:${size}px;left:${left}%;bottom:-10px;animation-duration:${duration}s;`;
+                container.appendChild(p);
+                setTimeout(() => p.remove(), duration * 1000);
+            }
+            setInterval(spawnParticle, 150);
+        })();
+
+        // 13. 发光分隔线滚动触发
+        document.querySelectorAll('.glow-divider').forEach(el => {
+            ScrollTrigger.create({
+                trigger: el,
+                start: 'top 90%',
+                onEnter: () => el.classList.add('active'),
+                once: true
+            });
+        });
+
+        // 13b. 水平线条展开滚动触发
+        document.querySelectorAll('.line-reveal').forEach(el => {
+            ScrollTrigger.create({
+                trigger: el,
+                start: 'top 85%',
+                onEnter: () => el.classList.add('active'),
+                once: true
+            });
+        });
+
+        // 14. 3D倾斜卡片跟随鼠标
+        document.querySelectorAll('.tilt-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / centerY * -8;
+                const rotateY = (x - centerX) / centerX * 8;
+                gsap.to(card, {
+                    rotateX, rotateY,
+                    duration: 0.5,
+                    ease: 'power2.out',
+                    transformPerspective: 800
+                });
+            });
+            card.addEventListener('mouseleave', () => {
+                gsap.to(card, {
+                    rotateX: 0, rotateY: 0,
+                    duration: 0.8,
+                    ease: 'elastic.out(1, 0.4)'
+                });
+            });
+        });
+
+        // 15. 遥测区数字计数器动画
+        function animateCounter(el, target, suffix = '') {
+            const obj = { val: 0 };
+            gsap.to(obj, {
+                val: target,
+                duration: 2,
+                ease: 'power2.out',
+                scrollTrigger: { trigger: el, start: 'top 85%' },
+                onUpdate: () => {
+                    if (Number.isInteger(target)) {
+                        el.innerText = Math.floor(obj.val).toLocaleString() + suffix;
+                    } else {
+                        el.innerText = obj.val.toFixed(1) + suffix;
+                    }
+                }
+            });
+        }
+
+        // 16. Telemetry区卡片错位进场
+        window.addEventListener('load', () => {
+            gsap.from('#telemetry .flex.flex-col', {
+                y: 60, opacity: 0, duration: 1.2, stagger: 0.2, ease: 'power3.out',
+                scrollTrigger: { trigger: '#telemetry', start: 'top 70%' }
+            });
+
+            // Dashboard面板入场
+            gsap.from('.dashboard-panel', {
+                y: 40, opacity: 0, scale: 0.98, duration: 1.5, ease: 'power4.out',
+                scrollTrigger: { trigger: '#cluster-status', start: 'top 75%' }
+            });
+
+            // Footer入场
+            gsap.from('#contact > *', {
+                y: 30, opacity: 0, duration: 1, stagger: 0.15, ease: 'power3.out',
+                scrollTrigger: { trigger: '#contact', start: 'top 80%' }
+            });
+        });
+
+    </script>
+</body>
+</html>
